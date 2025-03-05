@@ -1,8 +1,9 @@
 from pymongo import MongoClient
 from datetime import datetime
+import os 
 
 # MongoDB Connection (Replace with your credentials)
-MONGO_URI = "mongodb://localhost:27017/vasu"
+MONGO_URI = os.getenv("MONGO_URI")
 
 client = MongoClient(MONGO_URI)
 db = client["GitaBot"]  # Database name

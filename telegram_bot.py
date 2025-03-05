@@ -14,14 +14,11 @@ import os
 # Get API Keys from Environment Variables
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 app = Flask(__name__)
 bot = telegram.Bot(token=TOKEN)
-
-
-# Load OpenAI API Key (replace with your key)
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Load FAISS index & stored embeddings
 index = faiss.read_index("faiss_hnsw_index.bin")
