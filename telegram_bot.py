@@ -135,6 +135,7 @@ from database import save_chat, get_chat_history  # Import DB functions
 from flask import Flask, request
 import telegram
 import os
+from dotenv import load_dotenv
 
 # Load API Keys from Environment Variables
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")

@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from datetime import datetime
+from dotenv import load_dotenv
 import os 
 
 # MongoDB Connection (Replace with your credentials)
