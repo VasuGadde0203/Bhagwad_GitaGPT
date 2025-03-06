@@ -139,6 +139,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+print("🔍 Checking environment variables in Railway...")
+print(os.environ)  # Print all environment variables
+
+
 # Load API Keys from Environment Variables
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
