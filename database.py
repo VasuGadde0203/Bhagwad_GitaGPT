@@ -3,6 +3,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os 
 
+load_dotenv()
+
 # MongoDB Connection (Replace with your credentials)
 MONGO_URI = os.getenv("MONGO_URI")
 

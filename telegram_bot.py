@@ -137,6 +137,8 @@ import telegram
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 # Load API Keys from Environment Variables
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
@@ -195,14 +197,14 @@ async def generate_answer(query):
     """
     
     # Call OpenAI GPT-4
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "system", "content": "You are a Bhagavad Gita scholar."},
                   {"role": "user", "content": prompt}],
         max_tokens=200
     )
 
-    return await asyncio.to_thread(str, response["choices"][0]["message"]["content"])
+    return await asyncio.to_thread(str, response.choices[0].message.content)
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
