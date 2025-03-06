@@ -141,8 +141,8 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# print(f"Token: {TOKEN[:3]}")
-# print(f"Open AI api key: {OPENAI_API_KEY[:3]}")
+print(f"Token: {TOKEN[:3]}")
+print(f"Open AI api key: {OPENAI_API_KEY[:3]}")
 
 # Validate required environment variables
 if not TOKEN or not OPENAI_API_KEY:
