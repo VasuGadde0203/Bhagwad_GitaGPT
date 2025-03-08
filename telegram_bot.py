@@ -195,7 +195,7 @@ async def generate_answer(query):
         max_tokens=200
     )
 
-    return response.choices[0].message.content
+    return await asyncio.to_thread(str, response.choices[0].message.content)
 
 
 @app.route("/webhook", methods=["POST"])
@@ -231,4 +231,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
