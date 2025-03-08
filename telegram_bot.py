@@ -137,6 +137,8 @@ from flask import Flask, request
 import telegram
 import os
 from dotenv import load_dotenv
+from queue import Queue
+import asyncio
 
 load_dotenv()
 
@@ -145,13 +147,15 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+
 # Validate required environment variables
 if not TOKEN or not OPENAI_API_KEY:
     raise ValueError("❌ Missing TELEGRAM_BOT_TOKEN or OPENAI_API_KEY in environment variables.")
 
 # Initialize Flask app
 app = Flask(__name__)
-bot = telegram.Bot(token=TOKEN)
+# bot = telegram.Bot(token=TOKEN)
+application = Application.builder().token(TOKEN).update_queue(Queue()).build()
 
 # Load FAISS index & stored embeddings
 index = faiss.read_index("faiss_hnsw_index.bin")
@@ -196,8 +200,9 @@ async def generate_answer(query):
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    update = telegram.Update.de_json(request.get_json(), bot)
-    app.telegram_application.update_queue.put(update)
+    update = telegram.Update.de_json(request.get_json(force=True), application.bot)
+    # app.telegram_application.update_queue.put(update)
+    asyncio.run(application.update_queue.put(update))
     return "OK", 200
 
 
@@ -214,7 +219,6 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
 
 
 def main():
-    application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
