@@ -209,5 +209,5 @@ async def main():
 
     await application.bot.setWebhook(f"{WEBHOOK_URL}/webhook")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+asyncio.run(main())
