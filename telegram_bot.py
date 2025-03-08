@@ -120,7 +120,11 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-PORT = int(os.getenv("PORT", 8000))
+# PORT = int(os.getenv("PORT", 8000))
+try:
+    PORT = int(os.getenv("PORT", "8000"))
+except ValueError:
+    PORT = 8000
 
 # Validate required environment variables
 if not TOKEN or not OPENAI_API_KEY:
@@ -131,6 +135,7 @@ app = FastAPI()
 
 # Telegram Bot Application
 application = Application.builder().token(TOKEN).update_queue(Queue()).build()
+print(application)
 
 # Load FAISS index & stored embeddings
 index = faiss.read_index("faiss_hnsw_index.bin")
@@ -197,7 +202,7 @@ application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_m
 # ✅ Webhook Route (No asyncio.run() now)
 @app.post("/webhook")
 async def webhook(request: Request):
-    print(request.json())
+    print("Request: ", request.json())
     update = telegram.Update.de_json(await request.json(), application.bot)
     print(update)
     await application.update_queue.put(update)
@@ -209,7 +214,7 @@ async def lifespan(app: FastAPI):
     # ✅ Dynamically get Railway URL with HTTPS
     webhook_url = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN')}/webhook"
     print(f"✅ Setting Webhook to: {webhook_url}")
-    
+    print(f"Telegram token: {os.getenv('TELEGRAM_BOT_TOKEN')}")
     # ✅ Set Telegram Webhook
     await application.bot.setWebhook(webhook_url)
     print(f"✅ Webhook set successfully to {webhook_url}")
