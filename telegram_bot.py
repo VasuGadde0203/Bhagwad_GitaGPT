@@ -1,4 +1,4 @@
-# from telegram import Update
+# from telegram import Update, Bot
 # from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 # import pickle
 # import faiss
@@ -6,12 +6,13 @@
 # from sentence_transformers import SentenceTransformer
 # import openai
 # from database import save_chat, get_chat_history
-# from fastapi import FastAPI
+# from fastapi import FastAPI, Request
 # import telegram
 # import os
 # from dotenv import load_dotenv
 # from queue import Queue
-# import asyncio
+# from contextlib import asynccontextmanager
+# import uvicorn
 
 # load_dotenv()
 
@@ -19,6 +20,11 @@
 # TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 # OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# # PORT = int(os.getenv("PORT", 8000))
+# try:
+#     PORT = int(os.getenv("PORT", "8000"))
+# except ValueError:
+#     PORT = 8000
 
 # # Validate required environment variables
 # if not TOKEN or not OPENAI_API_KEY:
@@ -26,7 +32,11 @@
 
 # # Initialize FastAPI app
 # app = FastAPI()
-# application = Application.builder().token(TOKEN).update_queue(Queue()).build()
+
+# # Initialize Telegram Bot
+# bot = Bot(token=TOKEN)
+# application = Application.builder().token(TOKEN).build()
+# print(application)
 
 # # Load FAISS index & stored embeddings
 # index = faiss.read_index("faiss_hnsw_index.bin")
@@ -37,12 +47,14 @@
 # model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 
+# # ✅ Function to search similar verses from FAISS
 # def search_gita(query, top_k=3):
 #     query_embedding = model.encode([query], convert_to_numpy=True)
 #     distances, indices = index.search(query_embedding, top_k)
 #     return [chunks[i] for i in indices[0]]
 
 
+# # ✅ Function to generate OpenAI answer
 # async def generate_answer(query):
 #     matching_verses = search_gita(query)
 #     context = "\n".join(matching_verses)
@@ -66,20 +78,15 @@
 #         max_tokens=200
 #     )
 
-#     return await asyncio.to_thread(str, response.choices[0].message.content)
+#     return response.choices[0].message.content
 
 
-# @app.post("/webhook")
-# async def webhook(update: dict):
-#     telegram_update = telegram.Update.de_json(update, application.bot)
-#     await application.update_queue.put(telegram_update)
-#     return {"status": "ok"}
-
-
+# # ✅ Telegram Command: /start
 # async def start(update: Update, context: CallbackContext) -> None:
 #     await update.message.reply_text("🙏 Welcome to Bhagavad Gita Q&A Bot! Ask any life-related question.")
 
 
+# # ✅ Telegram Message Handler
 # async def handle_message(update: Update, context: CallbackContext) -> None:
 #     user_id = str(update.message.chat_id)
 #     user_query = update.message.text
@@ -88,17 +95,54 @@
 #     await update.message.reply_text(response)
 
 
-# async def main():
-#     application.add_handler(CommandHandler("start", start))
-#     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-#     await application.bot.setWebhook(f"{WEBHOOK_URL}/webhook")
-
-# # if __name__ == "__main__":
-# asyncio.run(main())
+# # ✅ Add Telegram Bot Handlers
+# application.add_handler(CommandHandler("start", start))
+# application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 
-from telegram import Update
+# # ✅ Webhook Route (No asyncio.run() now)
+# @app.post("/webhook")
+# async def webhook(request: Request):
+#     print("Request: ", request.json())
+#     update = telegram.Update.de_json(await request.json(), application.bot)
+#     print(update)
+#     await application.update_queue.put(update)
+#     return {"status": "ok"}
+
+
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     # ✅ Dynamically get Railway URL with HTTPS
+#     webhook_url = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN')}/webhook"
+#     print(f"✅ Setting Webhook to: {webhook_url}")
+#     print(f"Telegram token: {os.getenv('TELEGRAM_BOT_TOKEN')}")
+#     # ✅ Set Telegram Webhook
+#     await application.bot.setWebhook(webhook_url)
+#     print(f"✅ Webhook set successfully to {webhook_url}")
+
+#     yield
+
+#     # ✅ Delete Webhook on shutdown
+#     print("❌ Shutting down... Deleting Webhook")
+#     await application.bot.deleteWebhook()
+
+
+# # ✅ Register Lifespan (this replaces @app.on_event("startup"))
+# app.router.lifespan_context = lifespan
+
+
+# # ✅ Health Check Route
+# @app.get("/")
+# async def health_check():
+#     return {"status": "Bot is running successfully!"}
+
+# # ✅ Run Uvicorn Server (for Railway)
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=PORT)
+
+
+
+from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import pickle
 import faiss
@@ -120,11 +164,6 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# PORT = int(os.getenv("PORT", 8000))
-try:
-    PORT = int(os.getenv("PORT", "8000"))
-except ValueError:
-    PORT = 8000
 
 # Validate required environment variables
 if not TOKEN or not OPENAI_API_KEY:
@@ -133,9 +172,9 @@ if not TOKEN or not OPENAI_API_KEY:
 # Initialize FastAPI app
 app = FastAPI()
 
-# Telegram Bot Application
-application = Application.builder().token(TOKEN).update_queue(Queue()).build()
-print(application)
+# Initialize Telegram Bot
+bot = Bot(token=TOKEN)
+application = Application.builder().token(TOKEN).build()
 
 # Load FAISS index & stored embeddings
 index = faiss.read_index("faiss_hnsw_index.bin")
@@ -168,7 +207,7 @@ async def generate_answer(query):
     Answer in a clear and concise manner under 120 words.
     """
 
-    response = openai.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a Bhagavad Gita scholar."},
@@ -199,35 +238,12 @@ application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 
-# ✅ Webhook Route (No asyncio.run() now)
-@app.post("/webhook")
+# ✅ Webhook Route
+@app.post("/api/webhook")
 async def webhook(request: Request):
-    print("Request: ", request.json())
     update = telegram.Update.de_json(await request.json(), application.bot)
-    print(update)
     await application.update_queue.put(update)
     return {"status": "ok"}
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # ✅ Dynamically get Railway URL with HTTPS
-    webhook_url = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN')}/webhook"
-    print(f"✅ Setting Webhook to: {webhook_url}")
-    print(f"Telegram token: {os.getenv('TELEGRAM_BOT_TOKEN')}")
-    # ✅ Set Telegram Webhook
-    await application.bot.setWebhook(webhook_url)
-    print(f"✅ Webhook set successfully to {webhook_url}")
-
-    yield
-
-    # ✅ Delete Webhook on shutdown
-    print("❌ Shutting down... Deleting Webhook")
-    await application.bot.deleteWebhook()
-
-
-# ✅ Register Lifespan (this replaces @app.on_event("startup"))
-app.router.lifespan_context = lifespan
 
 
 # ✅ Health Check Route
@@ -235,6 +251,9 @@ app.router.lifespan_context = lifespan
 async def health_check():
     return {"status": "Bot is running successfully!"}
 
-# ✅ Run Uvicorn Server (for Railway)
+# ✅ Main entry point for Vercel
+def handler(request):
+    return app
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
