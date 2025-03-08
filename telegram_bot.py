@@ -218,13 +218,13 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(response)
 
 
-def main():
+async def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Bind the application to Flask
     app.telegram_application = application
-    application.bot.setWebhook(f"{WEBHOOK_URL}/webhook")
+    await application.bot.setWebhook(f"{WEBHOOK_URL}/webhook")
 
     # Run Flask
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
