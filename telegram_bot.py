@@ -227,7 +227,12 @@ async def main():
     await application.bot.setWebhook(f"{WEBHOOK_URL}/webhook")
 
     # Run Flask
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    # app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    
+    # ✅ Run Flask app in a separate asyncio task
+    loop = asyncio.get_running_loop()
+    task = loop.run_in_executor(None, app.run, "0.0.0.0", int(os.getenv("PORT", 5000)))
+    await task
 
 
 if __name__ == "__main__":
