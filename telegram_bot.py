@@ -204,16 +204,18 @@ async def webhook(request: Request):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Set Telegram Webhook When App Starts
-    webhook_url = f"{WEBHOOK_URL}/webhook"
+    # ✅ Dynamically get Railway URL with HTTPS
+    webhook_url = f"https://{os.getenv('RAILWAY_PUBLIC_DOMAIN')}/webhook"
+    print(f"✅ Setting Webhook to: {webhook_url}")
+    
+    # ✅ Set Telegram Webhook
     await application.bot.setWebhook(webhook_url)
-    print(f"✅ Webhook set to {webhook_url}")
+    print(f"✅ Webhook set successfully to {webhook_url}")
 
-    # Keep the app alive
     yield
 
-    # Optional: Do some cleanup when app stops
-    print("❌ App shutting down, removing webhook...")
+    # ✅ Delete Webhook on shutdown
+    print("❌ Shutting down... Deleting Webhook")
     await application.bot.deleteWebhook()
 
 
