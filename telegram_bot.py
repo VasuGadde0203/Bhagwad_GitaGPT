@@ -197,7 +197,9 @@ application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_m
 # ✅ Webhook Route (No asyncio.run() now)
 @app.post("/webhook")
 async def webhook(request: Request):
+    print(request.json())
     update = telegram.Update.de_json(await request.json(), application.bot)
+    print(update)
     await application.update_queue.put(update)
     return {"status": "ok"}
 
