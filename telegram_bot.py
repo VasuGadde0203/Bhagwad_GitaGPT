@@ -112,6 +112,7 @@ import os
 from dotenv import load_dotenv
 from queue import Queue
 from contextlib import asynccontextmanager
+import uvicorn
 
 load_dotenv()
 
@@ -119,6 +120,7 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+PORT = int(os.getenv("PORT", 8000))
 
 # Validate required environment variables
 if not TOKEN or not OPENAI_API_KEY:
@@ -223,3 +225,7 @@ app.router.lifespan_context = lifespan
 @app.get("/")
 async def health_check():
     return {"status": "Bot is running successfully!"}
+
+# ✅ Run Uvicorn Server (for Railway)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
