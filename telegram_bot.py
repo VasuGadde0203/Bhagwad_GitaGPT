@@ -111,6 +111,7 @@ import telegram
 import os
 from dotenv import load_dotenv
 from queue import Queue
+from contextlib import asynccontextmanager
 
 load_dotenv()
 
@@ -199,12 +200,23 @@ async def webhook(request: Request):
     return {"status": "ok"}
 
 
-# ✅ Set Telegram Webhook On Startup
-@app.on_event("startup")
-async def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Set Telegram Webhook When App Starts
     webhook_url = f"{WEBHOOK_URL}/webhook"
     await application.bot.setWebhook(webhook_url)
     print(f"✅ Webhook set to {webhook_url}")
+
+    # Keep the app alive
+    yield
+
+    # Optional: Do some cleanup when app stops
+    print("❌ App shutting down, removing webhook...")
+    await application.bot.deleteWebhook()
+
+
+# ✅ Register Lifespan (this replaces @app.on_event("startup"))
+app.router.lifespan_context = lifespan
 
 
 # ✅ Health Check Route
