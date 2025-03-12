@@ -153,17 +153,15 @@ from database import save_chat, get_chat_history
 from fastapi import FastAPI, Request
 import telegram
 import os
-from dotenv import load_dotenv
+from decouple import config
 from queue import Queue
 from contextlib import asynccontextmanager
 import uvicorn
 
-load_dotenv()
-
 # Load API Keys from Environment Variables
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+TOKEN = config("TELEGRAM_BOT_TOKEN")
+WEBHOOK_URL = config("WEBHOOK_URL")
+OPENAI_API_KEY = config("OPENAI_API_KEY")
 
 # Validate required environment variables
 if not TOKEN or not OPENAI_API_KEY:
@@ -256,4 +254,4 @@ def handler(request):
     return app
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    uvicorn.run(app, host="0.0.0.0", port=8000)
