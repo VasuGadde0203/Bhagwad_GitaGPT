@@ -207,7 +207,7 @@ async def generate_answer(query):
     Answer in a clear and concise manner under 120 words.
     """
 
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a Bhagavad Gita scholar."},
