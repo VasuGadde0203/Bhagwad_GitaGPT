@@ -218,45 +218,75 @@ async def generate_answer(query):
 
 
 # ✅ Telegram Command: /start
+# async def start(update: Update, context: CallbackContext) -> None:
+#     await update.message.reply_text("🙏 Welcome to Bhagavad Gita Q&A Bot! Ask any life-related question.")
+
+
+# # ✅ Telegram Message Handler
+# async def handle_message(update: Update, context: CallbackContext) -> None:
+#     user_id = str(update.message.chat_id)
+#     user_query = update.message.text
+#     response = await generate_answer(user_query)
+#     save_chat(user_id, user_query, response)
+#     await update.message.reply_text(response)
+
+
+# # ✅ Add Telegram Bot Handlers
+# application.add_handler(CommandHandler("start", start))
+# application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+
+# # ✅ Webhook Route
+# @app.post("/api/webhook")
+# async def webhook(request: Request):
+#     try:
+#         update_data = await request.json()
+#         update = telegram.Update.de_json(update_data, application.bot)
+#         await application.process_update(update)  # Directly process update
+#         return {"status": "ok"}
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}
+
+
+
+# # ✅ Health Check Route
+# @app.get("/")
+# async def health_check():
+#     return {"status": "Bot is running successfully!"}
+
+# # ✅ Main entry point for Vercel
+# def handler(request):
+#     return app
+
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+# Handle the /start command
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text("🙏 Welcome to Bhagavad Gita Q&A Bot! Ask any life-related question.")
+    await update.message.reply_text("🙏 Welcome to Bhagavad Gita Q&A Bot!\n\nAsk any life-related question, and I'll respond based on the Bhagavad Gita.")
 
 
-# ✅ Telegram Message Handler
+# Handle incoming messages (Q&A)
 async def handle_message(update: Update, context: CallbackContext) -> None:
-    user_id = str(update.message.chat_id)
     user_query = update.message.text
     response = await generate_answer(user_query)
-    save_chat(user_id, user_query, response)
     await update.message.reply_text(response)
 
 
-# ✅ Add Telegram Bot Handlers
-application.add_handler(CommandHandler("start", start))
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+# Main function to run the bot using polling
+def main():
+    # Initialize the Telegram Bot
+    app = Application.builder().token(TOKEN).build()
 
+    # Add Command and Message Handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# ✅ Webhook Route
-@app.post("/api/webhook")
-async def webhook(request: Request):
-    try:
-        update_data = await request.json()
-        update = telegram.Update.de_json(update_data, application.bot)
-        await application.process_update(update)  # Directly process update
-        return {"status": "ok"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    # Start the bot with polling
+    print("🤖 Telegram Bot is running using Polling...")
+    app.run_polling()
 
-
-
-# ✅ Health Check Route
-@app.get("/")
-async def health_check():
-    return {"status": "Bot is running successfully!"}
-
-# ✅ Main entry point for Vercel
-def handler(request):
-    return app
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    main()
