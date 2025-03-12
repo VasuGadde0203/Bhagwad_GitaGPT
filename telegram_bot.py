@@ -239,9 +239,14 @@ application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_m
 # ✅ Webhook Route
 @app.post("/api/webhook")
 async def webhook(request: Request):
-    update = telegram.Update.de_json(await request.json(), application.bot)
-    await application.update_queue.put(update)
-    return {"status": "ok"}
+    try:
+        update_data = await request.json()
+        update = telegram.Update.de_json(update_data, application.bot)
+        await application.process_update(update)  # Directly process update
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 
 # ✅ Health Check Route
