@@ -161,6 +161,7 @@ import asyncio
 
 # Load API Keys from Environment Variables
 TOKEN = config("TELEGRAM_BOT_TOKEN")
+print(f"Token: {TOKEN}")
 WEBHOOK_URL = config("WEBHOOK_URL")
 OPENAI_API_KEY = config("OPENAI_API_KEY")
 
