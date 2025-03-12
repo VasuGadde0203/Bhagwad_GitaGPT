@@ -157,6 +157,7 @@ from decouple import config
 from queue import Queue
 from contextlib import asynccontextmanager
 import uvicorn
+import asyncio
 
 # Load API Keys from Environment Variables
 TOKEN = config("TELEGRAM_BOT_TOKEN")
@@ -167,12 +168,6 @@ OPENAI_API_KEY = config("OPENAI_API_KEY")
 if not TOKEN or not OPENAI_API_KEY:
     raise ValueError("❌ Missing TELEGRAM_BOT_TOKEN or OPENAI_API_KEY in environment variables.")
 
-# Initialize FastAPI app
-app = FastAPI()
-
-# Initialize Telegram Bot
-bot = Bot(token=TOKEN)
-application = Application.builder().token(TOKEN).build()
 
 # Load FAISS index & stored embeddings
 index = faiss.read_index("faiss_hnsw_index.bin")
@@ -214,7 +209,7 @@ async def generate_answer(query):
         max_tokens=200
     )
 
-    return response.choices[0].message.content
+    return await asyncio.to_thread(str, response.choices[0].message.content)
 
 
 # ✅ Telegram Command: /start
